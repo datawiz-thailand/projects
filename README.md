@@ -1,5 +1,4 @@
-<img src="images/datawiz.png" alt="datawiz"  width="350"/>
-<br>
+<img src="images/datawiz.png" alt="datawiz"/>
 
 # Projects
 
