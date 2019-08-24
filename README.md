@@ -1,14 +1,16 @@
-<img src="images/datawiz.png" alt="datawiz" />
+<img src="images/datawiz.png" alt="datawiz"  width="700"/>
 
 # Projects
 
-## 1. Information Digest
+
+## [Tensorflow Serving](tensorflow_serving)
+
+## Information Digest
 > TODO
 
 
-## 2. Pantip-based Topic Classification
+## Pantip-based Topic Classification
 > TODO
 
-## 3. Government Open Data
-* [Average Household Income](government_open_data)
+## [Government Open Data](government_open_data)
 
