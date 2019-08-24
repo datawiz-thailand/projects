@@ -1,13 +1,14 @@
+<img src="images/datawiz.png" alt="datawiz" />
+
 # Projects
 
 ## 1. Information Digest
-[link](natural_language_processing/information_digest)
+> TODO
 
 
 ## 2. Pantip-based Topic Classification
+> TODO
 
 ## 3. Government Open Data
 * [Average Household Income](government_open_data)
-
-![](government_open_data/docs/household-income.gif) 
 
