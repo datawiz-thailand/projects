@@ -1,49 +1,49 @@
 # TensorFlow Serving
+> Tutorial นี้เป็นส่วนหนึ่งของ Medium blog post นี้ครับ https://medium.com/@poom.wettayakorn/https-medium-com-poom-wettayakorn-deploy-image-recognition-using-tensorflow-serving-253f210f982e
 
-TensorFlow Serving is a flexible, high-performance serving system for
-machine learning models, designed for production environments. It deals with
-the *inference* aspect of machine learning, taking models after *training* and
-managing their lifetimes, providing clients with versioned access via
-a high-performance, reference-counted lookup table.
-TensorFlow Serving provides out-of-the-box integration with TensorFlow models,
-but can be easily extended to serve other types of models and data.
+TensorFlow Serving คือ High Performance Serving System สำหรับ Machine Learningที่ออกแบบมาเพื่อใช้งานบน Production
 
-To note a few features:
+ซึ่งเป็นตัวจัดการโมเดล inference ของ machine learning ที่ช่วยในการทำงานบน scale ที่ใหญ่ขึ้น โดยมี features ที่สามารถใช้ได้กับ use cases เหล่านี้:
 
--   Can serve multiple models, or multiple versions of the same model
-    simultaneously
--   Exposes both gRPC as well as HTTP inference endpoints
--   Allows deployment of new model versions without changing any client code
--   Supports canarying new versions and A/B testing experimental models
--   Adds minimal latency to inference time due to efficient, low-overhead
-    implementation
--   Features a scheduler that groups individual inference requests into batches
-    for joint execution on GPU, with configurable latency controls
--   Supports many *servables*: Tensorflow models, embeddings, vocabularies,
-    feature transformations and even non-Tensorflow-based machine learning
-    models
+* ต้องการรันหลายโมเดล หรือหลายโมเดลเวอร์ชั่นพร้อมกัน (ช่วนในการทำ experiments และ A/B testing)
 
-## Serve a Tensorflow model in 60 seconds
+* ปล่อย API endpoints ให้ฝั่ง client (ได้ทั้ง RPC และ HTTP protocol)
+
+* ลด latency และการจัดการทรัพยากร GPU อย่างมีประสิทธิภาพ
+
+## Serve a Tensorflow model in 5 minutes
+
+### ResNet
+เริ่มจากสร้าง folder ไว้เก็บโมเดล /tmp/resnet จากนั้นดาวน์โหลด resnet_v2_fp32_savedmodel ด้วย cURL และ extract ไฟล์
+
 ```bash
-# Download the TensorFlow Serving Docker image and repo
-docker pull tensorflow/serving
-
-git clone https://github.com/tensorflow/serving
-# Location of demo models
-TESTDATA="$(pwd)/serving/tensorflow_serving/servables/tensorflow/testdata"
-
-# Start TensorFlow Serving container and open the REST API port
-docker run -t --rm -p 8501:8501 \
-    -v "$TESTDATA/saved_model_half_plus_two_cpu:/models/half_plus_two" \
-    -e MODEL_NAME=half_plus_two \
-    tensorflow/serving &
-
-# Query the model using the predict API
-curl -d '{"instances": [1.0, 2.0, 5.0]}' \
-    -X POST http://localhost:8501/v1/models/half_plus_two:predict
-
-# Returns => { "predictions": [2.5, 3.0, 4.5] }
+$ mkdir /tmp/resnet
+$ curl -s https://storage.googleapis.com/download.tensorflow.org/models/official/20181001_resnet/savedmodels/resnet_v2_fp32_savedmodel_NHWC_jpg.tar.gz | tar --strip-components=2 -C /tmp/resnet -xvz
 ```
+
+### TensorFlow Serving with Docker
+เมื่อได้ Pre-trained ResNet มาแล้ว ต่อไปคือรัน TensorFlow Serving server โดยวิธีที่ง่ายที่สุดคือใช้ผ่าน docker ซึ่งเพียงแค่รันไม่กี่ commands ก็ได้ทั้ง server และ API endpoints ให้เรียกใช้ได้ทันที
+
+```bash
+$ docker pull tensorflow/serving
+$ docker run --rm -it -p 8501:8501 -v /tmp/resnet:/models/resnet -e MODEL_NAME=resnet tensorflow/serving
+```
+
+Docker run command นี้ประกอบไปด้วยอะไรบ้าง:
+
+* `-p 8501:8501` : เปิดพอร์ต 8501 สำหรับ REST API (8500 สำหรับ gRPC)
+* `-v /tmp/resnet:/models/resnet` : mount directory ของ local (/tmp/resnet) ไปที่ container ในชื่อ /models/resnet
+* `-e MODEL_NAME=resnet` : กำหนดให้โหลดโมเดลชื่อ "resnet"
+
+### Model Inference
+
+ขั้นตอนสุดท้ายคือการทำโมเดล Inference โดยรัน client ในการเรียก REST API ไปที่ Serving server
+
+```bash
+$ curl -o /tmp/resnet/resnet_client.py https://raw.githubusercontent.com/tensorflow/serving/master/tensorflow_serving/example/resnet_client.py
+$ python /tmp/resnet/resnet_client.py
+```
+เท่านี้เราก็ได้ผลลัพธ์ prediction และค่า average latency อีกด้วย ซึ่งอยู่ที่ประมาณ 59 ms 👍
 
 ## Reference
 * [https://github.com/tensorflow/serving](https://github.com/tensorflow/serving)
